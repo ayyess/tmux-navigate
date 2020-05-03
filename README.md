@@ -33,6 +33,14 @@ bind-key -n M-l  run-shell -b "#{navigate_pane} right"
 bind-key -n M-\\ run-shell -b "#{navigate_pane} back"
 ```
 
+3.5 Disable auto-cycling behaviour
+
+Install [tmux-select-pane-no-wrap](https://github.com/dalejung/tmux-select-pane-no-wrap)
+
+```sh
+set -g @plugin 'sunaku/tmux-navigate'
+```
+
 4. Timeout for very slow Vim (optional):
 ```sh
 # set this ONLY IF your Vim is very slow

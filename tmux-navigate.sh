@@ -62,6 +62,14 @@ navigate() {
       fi;
     fi;
   elif ! pane_is_zoomed; then
+    at_edge_script=$(tmux display-message -p "#{at_edge}")
+    if [[ -x ${at_edge_script} ]]; then
+      # get the L/R/D/U direction
+      edge_direction="${tmux_navigation_command: -1}"
+      if "$at_edge_script" "$edge_direction"; then
+        exit 0
+      fi
+    fi
     eval "$tmux_navigation_command";
   fi;
 };
