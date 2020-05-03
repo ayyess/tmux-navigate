@@ -25,19 +25,12 @@ set -g @plugin 'sunaku/tmux-navigate'
 
 3. Configure your navigation shortcuts:
 ```sh
-# if you're using QWERTY layout
-set -g @navigate-left  '-n M-h'
-set -g @navigate-down  '-n M-j'
-set -g @navigate-up    '-n M-k'
-set -g @navigate-right '-n M-l'
-set -g @navigate-back  '-n M-\'
-
-# if you're using DVORAK layout
-set -g @navigate-back  '-n M-d'
-set -g @navigate-left  '-n M-h'
-set -g @navigate-up    '-n M-t'
-set -g @navigate-down  '-n M-n'
-set -g @navigate-right '-n M-s'
+set -g @navigate-no-bindings
+bind-key -n M-h  run-shell -b "#{navigate_pane} left"
+bind-key -n M-j  run-shell -b "#{navigate_pane} down"
+bind-key -n M-k  run-shell -b "#{navigate_pane} up"
+bind-key -n M-l  run-shell -b "#{navigate_pane} right"
+bind-key -n M-\\ run-shell -b "#{navigate_pane} back"
 ```
 
 4. Timeout for very slow Vim (optional):

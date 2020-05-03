@@ -13,6 +13,7 @@
 #      +-------------+------------+-----------------------------+
 #
 # See https://sunaku.github.io/tmux-select-pane.html for documentation.
+set -euo pipefail
 
 get_tmux_option() { tmux show-option -gqv "$@" | grep . ;}
 
