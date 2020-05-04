@@ -48,6 +48,9 @@ navigate() {
   vim_navigation_only_if=${3:-true};
   if pane_contains_vim && eval "$vim_navigation_only_if"; then
     if pane_contains_neovim_terminal; then
+      # Being in insert-terminal-mode causes the title string to not be
+      # updated. This is presumably so that program inside the terminal can set
+      # the title to something itself.
       tmux send-keys C-\\ C-n;
     fi;
     if [[ "$pane_title" == *"mode:i"* ]]; then
@@ -63,13 +66,14 @@ navigate() {
       fi;
     fi;
   elif ! pane_is_zoomed; then
+    # get the L/R/D/U direction
+    edge_direction="${tmux_navigation_command: -1}"
     at_edge_script=$(tmux display-message -p "#{at_edge}")
-    if [[ -x ${at_edge_script} ]]; then
+    # Skip edge check if the action is "back"
+    if [[ *"$edge_direction"* == "LDUR" ]] && [[ -x ${at_edge_script} ]]; then
       # `if-shell` can't be used for this e.g.
       #   bind-key -T root M-h if-shell -b "! #{at_edge} L" "run-shell '#{navigate_pane} left'"
       # because at_edge doesn't know about vim.
-      # get the L/R/D/U direction
-      edge_direction="${tmux_navigation_command: -1}"
       if "$at_edge_script" "$edge_direction"; then
         exit 0
       fi
