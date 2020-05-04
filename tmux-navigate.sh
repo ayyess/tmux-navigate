@@ -53,6 +53,10 @@ navigate() {
     if pane_contains_neovim_terminal; then
       tmux send-keys C-\\ C-n;
     fi;
+    if [[ "$pane_title" == *"mode:i"* ]]; then
+      # enter insert-normal mode for one command to allow a movement
+      tmux send-keys 'C-o'
+    fi
     eval "$vim_navigation_command";
     if ! pane_is_zoomed; then
       sleep $vim_navigation_timeout; # wait for Vim to change title;
