@@ -40,10 +40,7 @@ pane_contains_vim() {
   esac;
 };
 pane_contains_neovim_terminal() {
-  case "$pane_title" in
-    (nvim?term://*) true ;;
-    (*) false ;;
-  esac;
+  [[ "$pane_title" == "nvim\ term://"* ]]
 };
 navigate() {
   tmux_navigation_command=$1;
