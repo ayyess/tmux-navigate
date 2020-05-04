@@ -64,6 +64,9 @@ navigate() {
   elif ! pane_is_zoomed; then
     at_edge_script=$(tmux display-message -p "#{at_edge}")
     if [[ -x ${at_edge_script} ]]; then
+      # `if-shell` can't be used for this e.g.
+      #   bind-key -T root M-h if-shell -b "! #{at_edge} L" "run-shell '#{navigate_pane} left'"
+      # because at_edge doesn't know about vim.
       # get the L/R/D/U direction
       edge_direction="${tmux_navigation_command: -1}"
       if "$at_edge_script" "$edge_direction"; then
