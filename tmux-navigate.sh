@@ -14,6 +14,8 @@
 #
 # See https://sunaku.github.io/tmux-select-pane.html for documentation.
 set -euo pipefail
+PS4=':${LINENO}+'
+set -x
 
 get_tmux_option() { tmux show-option -gqv "$@" | grep . ;}
 
@@ -46,6 +48,21 @@ navigate() {
   tmux_navigation_command=$1;
   vim_navigation_command=$2;
   vim_navigation_only_if=${3:-true};
+
+  # get the L/R/D/U direction
+  edge_direction="${tmux_navigation_command: -1}"
+  at_edge_script=$(tmux display-message -p "#{at_edge}")
+  
+  tmux set-option -g @navigate-reenable-wrap 1
+
+  on_an_edge=0
+  if [[ "$(get_tmux_option '@navigate-reenable-wrap')" -eq 1 ]]; then
+    if [[ "LDUR" == *"$edge_direction"* ]] && [[ -x ${at_edge_script} ]]; then
+      if "$at_edge_script" "$edge_direction"; then
+        on_an_edge=1
+      fi
+    fi
+  fi
   if pane_contains_vim && eval "$vim_navigation_only_if"; then
     if pane_contains_neovim_terminal; then
       # Being in insert-terminal-mode causes the title string to not be
@@ -66,11 +83,8 @@ navigate() {
       fi;
     fi;
   elif ! pane_is_zoomed; then
-    # get the L/R/D/U direction
-    edge_direction="${tmux_navigation_command: -1}"
-    at_edge_script=$(tmux display-message -p "#{at_edge}")
-    # Skip edge check if the action is "back"
-    if [[ *"$edge_direction"* == "LDUR" ]] && [[ -x ${at_edge_script} ]]; then
+    # Skip edge detection if the action is "back"
+    if [[ "LDUR" == *"$edge_direction"* ]] && [[ -x ${at_edge_script} ]] && [[ ! "$(get_tmux_option '@navigate-reenable-wrap')" -eq 1 ]]; then
       # `if-shell` can't be used for this e.g.
       #   bind-key -T root M-h if-shell -b "! #{at_edge} L" "run-shell '#{navigate_pane} left'"
       # because at_edge doesn't know about vim.
@@ -80,6 +94,31 @@ navigate() {
     fi
     eval "$tmux_navigation_command";
   fi;
+  if [[ "$on_an_edge" -eq 1 ]]; then
+    if ! "$at_edge_script" "$edge_direction"; then
+      # no longer on an edge. We've swapped to the otherside.
+      pane_title="$(tmux display -p '#{q:pane_title}')";
+      # TODO sleep for ssh
+      pane_current_command="$(tmux display -p '#{q:pane_current_command}')";
+      if pane_contains_vim ; then
+        # TODO handle neovim terminal
+        if [[ "$pane_title" == *"mode:i"* ]]; then
+          # enter insert-normal mode for one command to allow a movement
+          tmux send-keys 'C-o'
+        fi
+        case "$edge_direction" in
+          L) vim_direction=l ;;
+          D) vim_direction=k ;;
+          U) vim_direction=j ;;
+          R) vim_direction=h ;;
+        esac
+        # fudge factor of 10 splits
+        tmux send-keys 10 C-w "$vim_direction"
+        # TODO why does tmux show 1 after the command?
+      fi
+    fi
+  fi
+  exit 0
 };
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
